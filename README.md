@@ -1,7 +1,10 @@
 Wordle clone frontend with React and Bootstrap-5 utility classes and toast class.
+
 Backend code link:
 
 https://github.com/ozgurSULUM/WordleCloneBackend
+
+![image](https://user-images.githubusercontent.com/41192900/155393004-5c8955bb-fa01-41fc-8750-3802a8175847.png)
 
 
 ## Available Scripts
