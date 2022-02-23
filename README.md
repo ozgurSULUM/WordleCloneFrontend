@@ -4,8 +4,7 @@ Backend code link:
 
 https://github.com/ozgurSULUM/WordleCloneBackend
 
-![image](https://user-images.githubusercontent.com/41192900/155393004-5c8955bb-fa01-41fc-8750-3802a8175847.png)
-
+![image](https://user-images.githubusercontent.com/41192900/155393372-510c09fe-e012-440a-8096-8bcc48285fea.png)
 
 ## Available Scripts
 
