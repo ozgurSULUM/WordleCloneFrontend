@@ -1,6 +1,4 @@
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Wordle clone frontend with React and Bootstrap-5 utility classes and toast class.
 
 ## Available Scripts
 
