@@ -1,6 +1,6 @@
 ###### Used Techs
-React
-Bootstrap v5
+- React
+- Bootstrap v5
 
 [Backend code](https://github.com/ozgurSULUM/WordleCloneBackend)
 
