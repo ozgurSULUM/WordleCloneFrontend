@@ -1,6 +1,7 @@
 ###### Used Techs
 - React
 - Bootstrap v5
+- Axios
 
 You need backend for getting random word and checking if the word exists in dictionary. You can find backend code [here.](https://github.com/ozgurSULUM/WordleCloneBackend)
 
