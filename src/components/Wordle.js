@@ -64,8 +64,8 @@ function Wordle() {
 
     // If word changes update the gameboard.
     useEffect(() => {
+        if (rowCounter === 5) return;
         setGameBoard((prevGameBoard) => {
-            if (rowCounter === 5) return;
             const newGameBoard = [...prevGameBoard];
             const charArr = newGameBoard[rowCounter];
             for (let i = 0; i < 5; i++) {
