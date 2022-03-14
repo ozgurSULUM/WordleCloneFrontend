@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import GameBoard from './GameBoard';
 import WordInput from './WordInput';
 import Toast from './Toast';
@@ -12,10 +12,9 @@ const storedWordKey = 'quess_word';
 const APIurls = { GET_WORD_URL: '/getword', CHECK_WORD_URL: '/checkword?word=' };
 const toastStates = { SHOW: 'toast show', NO_SHOW: 'toast' };
 const toastMessages = {
-    WORD_NOT_FOUND: 'Bu kelime sözlükte bulunmuyor.', WORD_IS_FOUND: 'Bu kelime sözlükte var.'
-    , CONGRATULATIONS: 'Tebrikler kelimeyi buldunuz.', GAME_OVER: "Kelimeyi bulamadınız kelime: "
+    CONGRATULATIONS: 'Tebrikler kelimeyi buldunuz.', GAME_OVER: "Kelimeyi bulamadınız kelime: "
 };
-
+const wordExists = { WORD_NOT_FOUND: 'Bu kelime sözlükte bulunmuyor.', WORD_IS_FOUND: 'Bu kelime sözlükte var.' };
 
 class Char {
     constructor(char) {
@@ -41,19 +40,16 @@ function Wordle() {
     const toastRef = useRef(null);
 
     // Word request function
-    const fetchQuessWord = () => {
+    const fetchQuessWord = useCallback(() => {
         axios.get(APIurls.GET_WORD_URL).then((response) => {
-            console.log("response.data.random_word: " + response.data.random_word);
             setQuess({ word: response.data.random_word });
             localStorage.setItem(storedWordKey, response.data.random_word);
         });
-    }
+    }, []);
 
     // Check if there any stored words in localStorage if not request from API
     useEffect(() => {
-
         const stored_word = localStorage.getItem(storedWordKey);
-
         if (stored_word === 'undefined' || stored_word === 'null' || stored_word === null || stored_word === undefined || stored_word === '') {
             console.log('request yapiliyor ve depolanaıyor.');
             fetchQuessWord();
@@ -64,23 +60,25 @@ function Wordle() {
             setQuess({ word: stored_word });
         }
 
-    }, []);
+    }, [fetchQuessWord]);
 
     // If word changes update the gameboard.
     useEffect(() => {
-        if (rowCounter === 5) return;
-        const newGameBoard = [...gameBoard];
-        const charArr = newGameBoard[rowCounter];
-        for (let i = 0; i < 5; i++) {
-            charArr[i].char = word[i]
-            if (word[i] === undefined) {
-                charArr[i].animation_name = Animations.NONE_ANIMATION;
-            } else {
-                charArr[i].animation_name = Animations.INPUT_ANIMATION;
+        setGameBoard((prevGameBoard) => {
+            if (rowCounter === 5) return;
+            const newGameBoard = [...prevGameBoard];
+            const charArr = newGameBoard[rowCounter];
+            for (let i = 0; i < 5; i++) {
+                charArr[i].char = word[i]
+                if (word[i] === undefined) {
+                    charArr[i].animation_name = Animations.NONE_ANIMATION;
+                } else {
+                    charArr[i].animation_name = Animations.INPUT_ANIMATION;
+                }
             }
-        }
-        newGameBoard[rowCounter] = charArr;
-        setGameBoard(newGameBoard);
+            newGameBoard[rowCounter] = charArr;
+            return newGameBoard;
+        });
     }, [word]);
 
     // Check word's characters and give them their corresponding states.
@@ -89,8 +87,6 @@ function Wordle() {
         let green_set = new Set();
         let orange_set = new Set();
         let uppercase_word = word.toUpperCase();
-        //console.log(uppercase_word);
-        //console.log(quess.word);
         for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 5; j++) {
                 let char1 = uppercase_word[i];
@@ -116,31 +112,30 @@ function Wordle() {
     }
 
     //Show toast with given message
-    const showToast = (message) => {
+    const showToast = useCallback((message) => {
         setToastHeader(message);
         toastRef.current.className = toastStates.SHOW;
         setTimeout(() => {
             toastRef.current.className = toastStates.NO_SHOW;
         }, 3000);
         console.log("toast mesajı: " + message);
-    }
+    }, []);
 
     //Ask to API if the word is in dict or not.
     const isWordInDict = async () => {
         let url = APIurls.CHECK_WORD_URL.concat(word.toUpperCase());
         const response = await axios.get(url);
         if (!response.data.exists) {
-            showToast(toastMessages.WORD_NOT_FOUND);
-            return Promise.reject(toastMessages.WORD_NOT_FOUND);
+            showToast(wordExists.WORD_NOT_FOUND);
+            return Promise.reject(wordExists.WORD_NOT_FOUND);
         } else {
-            console.log(toastMessages.WORD_IS_FOUND);
-            return Promise.resolve(toastMessages.WORD_IS_FOUND);
+            console.log(wordExists.WORD_IS_FOUND);
+            return Promise.resolve(wordExists.WORD_IS_FOUND);
         }
-    }
-
+    };
 
     //resets gameboard after game ends
-    const resetGameBoard = () => {
+    const resetGameBoard = useCallback(() => {
         setGameBoard([
             [new Char(''), new Char(''), new Char(''), new Char(''), new Char('')],
             [new Char(''), new Char(''), new Char(''), new Char(''), new Char('')],
@@ -148,12 +143,11 @@ function Wordle() {
             [new Char(''), new Char(''), new Char(''), new Char(''), new Char('')],
             [new Char(''), new Char(''), new Char(''), new Char(''), new Char('')]
         ]);
-    }
+    }, []);
 
     const submitWord = () => {
-        isWordInDict().then((exists) => {
-            console.log("exists" + exists);
-            const newGameBoard = [...gameBoard];
+        const setValidationAnimation = (prevGameBoard) => {
+            const newGameBoard = [...prevGameBoard];
             const charArr = newGameBoard[rowCounter];
             console.log(quess.word);
             const result_obj = checkWord();
@@ -170,11 +164,6 @@ function Wordle() {
                 character.validationAnimation = Animations.VALIDATION_ANIMATION;
                 i += 1;
             }
-
-            setGameBoard(newGameBoard);
-            setRowCounter(prevRowCounter => ++prevRowCounter);
-            setWord('');
-
             if (successRate === 5) {
                 setToastHeader(toastMessages.CONGRATULATIONS);
                 toastRef.current.className = toastStates.SHOW;
@@ -205,6 +194,15 @@ function Wordle() {
                     setRowCounter(0);
                 }, 4000)
             }
+
+            return newGameBoard;
+        }
+        isWordInDict().then((exists) => {
+            console.log('word exists ' + exists);
+            setGameBoard((prevGameBoard) => setValidationAnimation(prevGameBoard));
+            setRowCounter(prevRowCounter => ++prevRowCounter);
+            setWord('');
+
         }, (reject) => {
             console.log("reject" + reject);
         });
